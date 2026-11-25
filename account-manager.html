@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>账号管理 · Gemini 中文版</title>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f8f9fb;
+    --card: #ffffff;
+    --line: #e3e6ec;
+    --text: #1f2328;
+    --muted: #6b7280;
+    --blue: #1a73e8;
+    --green: #1e8e3e;
+    --red: #d93025;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+    font-size: 13px;
+  }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px;
+    background: var(--card);
+    border-bottom: 1px solid var(--line);
+  }
+  header h1 { margin: 0; font-size: 15px; font-weight: 600; }
+  header .sub { color: var(--muted); font-size: 12px; margin-top: 3px; }
+  .close {
+    border: 0; background: transparent; font-size: 18px; line-height: 1;
+    color: var(--muted); cursor: pointer; padding: 4px 8px; border-radius: 6px;
+  }
+  .close:hover { background: #f1f3f5; color: var(--text); }
+  main { padding: 16px 18px 22px; }
+  .status {
+    display: flex; align-items: center; gap: 8px;
+    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line);
+    background: var(--card); margin-bottom: 14px; font-size: 12px;
+  }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: #9aa0a6; flex: 0 0 auto; }
+  .dot.ok { background: var(--green); }
+  .dot.bad { background: var(--red); }
+  .switch-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    padding: 11px 14px; margin-bottom: 16px;
+  }
+  .switch-row .label { font-weight: 600; }
+  .switch-row .hint { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .switch { position: relative; width: 42px; height: 22px; flex: 0 0 auto; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute; inset: 0; background: #c7cbd1; border-radius: 999px; transition: .18s;
+  }
+  .slider:before {
+    content: ""; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px;
+    background: #fff; border-radius: 50%; transition: .18s;
+  }
+  .switch input:checked + .slider { background: var(--blue); }
+  .switch input:checked + .slider:before { transform: translateX(20px); }
+  h2 { font-size: 13px; margin: 0 0 8px; color: var(--muted); font-weight: 600; }
+  .list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+  .item {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    padding: 10px 12px;
+  }
+  .avatar {
+    width: 30px; height: 30px; border-radius: 50%; background: #e8f0fe; color: var(--blue);
+    display: flex; align-items: center; justify-content: center; font-weight: 600; flex: 0 0 auto;
+  }
+  .meta { flex: 1 1 auto; min-width: 0; }
+  .email { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .badges { color: var(--muted); font-size: 11px; margin-top: 3px; }
+  .badge { display: inline-block; padding: 1px 6px; border-radius: 5px; margin-right: 6px; }
+  .badge.pw { background: #e6f4ea; color: var(--green); }
+  .badge.nopw { background: #f1f3f5; color: var(--muted); }
+  .btn {
+    border: 1px solid var(--line); background: var(--card); color: var(--text);
+    padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 12px;
+  }
+  .btn:hover { background: #f1f3f5; }
+  .btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 600; }
+  .btn.primary:hover { filter: brightness(0.95); }
+  .btn.danger { color: var(--red); border-color: #f6c9c5; }
+  .btn.danger:hover { background: #fce8e6; }
+  .empty {
+    background: var(--card); border: 1px dashed var(--line); border-radius: 10px;
+    padding: 18px; text-align: center; color: var(--muted); margin-bottom: 18px;
+  }
+  form {
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px; display: grid; gap: 10px;
+  }
+  .field { display: grid; gap: 5px; }
+  .field label { color: var(--muted); font-size: 12px; }
+  input[type="email"], input[type="password"], input[type="text"] {
+    height: 34px; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px;
+    font-size: 13px; font-family: inherit; background: #fff; color: var(--text);
+  }
+  input:focus { outline: 2px solid #d2e3fc; border-color: var(--blue); }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .row .btn.primary { flex: 0 0 auto; }
+  .msg { font-size: 12px; min-height: 16px; }
+  .msg.ok { color: var(--green); }
+  .msg.err { color: var(--red); }
+  footer {
+    padding: 12px 18px 18px; color: var(--muted); font-size: 12px; line-height: 1.6;
+  }
+  footer code { background: #f1f3f5; padding: 1px 5px; border-radius: 5px; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>账号管理</h1>
+    <div class="sub">记住账号与密码，默认开启；密码加密保存在本机</div>
+  </div>
+  <button class="close" id="btnClose" title="关闭">✕</button>
+</header>
+
+<main>
+  <div class="status">
+    <span class="dot" id="netDot"></span>
+    <span id="netText">网络状态检测中…</span>
+  </div>
+
+  <div id="safeHint" style="font-size:12px;color:var(--muted);background:#f8f9fa;border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-bottom:8px;line-height:1.6">
+    安全模式信息读取中…
+  </div>
+
+  <div class="switch-row">
+    <div>
+      <div class="label">记住密码</div>
+      <div class="hint">开启后才保存密码；关闭将清除已保存的密码，只保留账号记录</div>
+    </div>
+    <label class="switch">
+      <input type="checkbox" id="rememberToggle" checked />
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <h2>已记住的账号</h2>
+  <div class="list" id="accountList"></div>
+
+  <h2>添加 / 更新账号</h2>
+  <form id="accountForm" autocomplete="off">
+    <div class="field">
+      <label for="email">Google 账号（邮箱）</label>
+      <input type="email" id="email" placeholder="例如 yourname@gmail.com" required />
+    </div>
+    <div class="field">
+      <label for="password">密码（开启“记住密码”时保存）</label>
+      <input type="password" id="password" placeholder="留空则只记账号，不保存密码" />
+    </div>
+    <div class="row">
+      <button type="submit" class="btn primary">保存账号</button>
+      <span class="msg" id="formMsg"></span>
+    </div>
+  </form>
+</main>
+
+<footer>
+  密码使用 Windows 系统级加密（DPAPI，仅当前 Windows 用户可解密），文件不保存明文。<br />
+  “删除”只清除本地记忆，不会注销 Google 账号；如需退出登录请用主窗口菜单「账号 → 退出当前 Google 账号」。<br />
+  存储位置：<code id="storePath">…</code><br />
+  作者：付自晧（大山）　微信：Fuzihao2050　QQ：20514365　广告人之家：ggrzj.cn
+</footer>
+
+<script>
+const api = window.accountApi;
+const listEl = document.getElementById('accountList');
+const formEl = document.getElementById('accountForm');
+const emailEl = document.getElementById('email');
+const passwordEl = document.getElementById('password');
+const formMsg = document.getElementById('formMsg');
+const rememberToggle = document.getElementById('rememberToggle');
+const netDot = document.getElementById('netDot');
+const netText = document.getElementById('netText');
+
+function setMsg(text, kind) {
+  formMsg.textContent = text || '';
+  formMsg.className = 'msg' + (kind ? ' ' + kind : '');
+}
+
+function timeText(iso) {
+  if (!iso) return '从未使用';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleString('zh-CN', { hour12: false });
+}
+
+function initialOf(email) {
+  const ch = (email || 'G').trim()[0] || 'G';
+  return ch.toUpperCase();
+}
+
+function render(data) {
+  rememberToggle.checked = Boolean(data.rememberPassword);
+  listEl.innerHTML = '';
+
+  if (!data.accounts.length) {
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.textContent = '还没有记住的账号，添加一个试试。';
+    listEl.appendChild(empty);
+    return;
+  }
+
+  for (const account of data.accounts) {
+    const item = document.createElement('div');
+    item.className = 'item';
+
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar';
+    avatar.textContent = initialOf(account.email);
+
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+
+    const email = document.createElement('div');
+    email.className = 'email';
+    email.textContent = account.email;
+
+    const badges = document.createElement('div');
+    badges.className = 'badges';
+    const pwBadge = document.createElement('span');
+    pwBadge.className = 'badge ' + (account.hasPassword ? 'pw' : 'nopw');
+    pwBadge.textContent = account.hasPassword ? '已保存密码' : '仅账号';
+    const last = document.createElement('span');
+    last.textContent = '最近使用：' + timeText(account.lastUsedAt);
+    badges.appendChild(pwBadge);
+    badges.appendChild(last);
+
+    meta.appendChild(email);
+    meta.appendChild(badges);
+
+    const loginBtn = document.createElement('button');
+    loginBtn.className = 'btn primary';
+    loginBtn.textContent = '登录';
+    loginBtn.addEventListener('click', async () => {
+      loginBtn.disabled = true;
+      try {
+        await api.loginWith(account.id);
+      } finally {
+        loginBtn.disabled = false;
+      }
+    });
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn danger';
+    delBtn.textContent = '删除';
+    delBtn.addEventListener('click', async () => {
+      if (!confirm('确定删除本地记忆的账号：' + account.email + ' ？\n（不会影响 Google 账号本身）')) return;
+      const next = await api.remove(account.id);
+      render(next);
+      setMsg('已删除：' + account.email, 'ok');
+    });
+
+    item.appendChild(avatar);
+    item.appendChild(meta);
+    item.appendChild(loginBtn);
+    item.appendChild(delBtn);
+    listEl.appendChild(item);
+  }
+}
+
+async function reload() {
+  const data = await api.list();
+  render(data);
+  document.getElementById('storePath').textContent = data.filePath || 'data\\accounts.json';
+  if (data.encryptionAvailable === false) {
+    setMsg('当前系统不支持加密存储，密码不会被保存。', 'err');
+  }
+}
+
+formEl.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  setMsg('');
+  try {
+    const remember = rememberToggle.checked;
+    const next = await api.upsert({
+      email: emailEl.value,
+      password: passwordEl.value,
+      rememberPassword: remember,
+    });
+    render(next);
+    setMsg('已保存：' + emailEl.value.trim(), 'ok');
+    emailEl.value = '';
+    passwordEl.value = '';
+  } catch (err) {
+    setMsg(String(err && err.message ? err.message : err), 'err');
+  }
+});
+
+rememberToggle.addEventListener('change', async () => {
+  const next = await api.setRemember(rememberToggle.checked);
+  render(next);
+  setMsg(rememberToggle.checked ? '已开启记住密码' : '已关闭记住密码，已清除保存的密码', 'ok');
+});
+
+document.getElementById('btnClose').addEventListener('click', () => api.close());
+
+(async function init() {
+  await reload();
+  const safeHint = document.getElementById('safeHint');
+  try {
+    const status = await api.status();
+    const dot = netDot;
+    dot.className = 'dot ' + (status.ok ? 'ok' : 'bad');
+    netText.textContent = status.text;
+    safeHint.textContent = status.safeMode
+      ? '安全模式已开启：点「登录」只打开 Google 登录页，由你手动输入一次密码，之后靠 Cookie 长期保持，不自动填写。'
+      : '安全模式已关闭：点「登录」会自动填写账号密码。程序化登录有被风控判定异常的风险，建议到菜单「帮助 → 账号安全建议」查看说明。';
+  } catch {
+    netText.textContent = '网络状态未知';
+    safeHint.textContent = '安全模式状态未知';
+  }
+})();
+</script>
+</body>
+</html>
