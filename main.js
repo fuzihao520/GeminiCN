@@ -282,3 +282,67 @@ async function openLocalFile() {
   if (result.canceled || result.filePaths.length === 0) return;
   await shell.openPath(result.filePaths[0]);
 }
+
+// ---------------------------------------------------------------
+// 页面脚本执行：走 CDP（Runtime.evaluate），不受站点 CSP 限制
+// ---------------------------------------------------------------
+const DEBUG_LOG = path.join(DATA_ROOT, 'debug.log');
+
+function logDebug(message) {
+  try {
+    fs.appendFileSync(DEBUG_LOG, `[${new Date().toISOString()}] ${message}\n`, 'utf8');
+  } catch {}
+}
+
+async function ensureDebugger() {
+  if (!mainWindow || mainWindow.isDestroyed()) return false;
+  const wc = mainWindow.webContents;
+  if (wc.debugger.isAttached()) return true;
+  try {
+    wc.debugger.attach('1.3');
+    return true;
+  } catch (err) {
+    logDebug(`debugger attach failed: ${err?.message || err}`);
+    return false;
+  }
+}
+
+/** 在页面里执行脚本，返回可序列化结果 */
+async function pageEval(expression, retry = true) {
+  if (!mainWindow || mainWindow.isDestroyed()) return null;
+
+  // 安全模式：不挂调试器、不向 Google 页面注入任何脚本
+  if (settings.safeMode) return null;
+
+  if (await ensureDebugger()) {
+    try {
+      const result = await mainWindow.webContents.debugger.sendCommand('Runtime.evaluate', {
+        expression,
+        awaitPromise: true,
+        returnByValue: true,
+      });
+      if (result?.exceptionDetails) {
+        const detail = result.exceptionDetails.exception?.description || result.exceptionDetails.text || '';
+        logDebug(`pageEval exception: ${detail.slice(0, 200)}`);
+        return null;
+      }
+      return result?.result?.value ?? null;
+    } catch (err) {
+      logDebug(`pageEval failed: ${err?.message || err}`);
+      try {
+        mainWindow.webContents.debugger.detach();
+      } catch {}
+      if (retry) {
+        await sleep(300);
+        return pageEval(expression, false);
+      }
+      return null;
+    }
+  }
+
+  // 兜底：CDP 不可用时的普通注入
+  return mainWindow.webContents.executeJavaScript(expression).catch((err) => {
+    logDebug(`fallback inject failed: ${err?.message || err}`);
+    return null;
+  });
+}
