@@ -1,15 +1,15 @@
 {
   "name": "gemini-cn-client",
-  "productName": "GeminiCN",
-  "version": "1.3.0",
-  "description": "Gemini 中文版（Edge 内核）：真实 Edge 应用窗口打开 Gemini，默认简体中文、数据随程序、Cookie 长期保留、网络状态提醒、账号记忆",
+  "productName": "GemCN",
+  "version": "1.3.1",
+  "description": "GemCN：非官方 Gemini 网页桌面外壳。调用本机 Microsoft Edge 以应用窗口打开网页，默认简体中文、数据随程序、Cookie 长期保留、网络与延迟提示。与 Google 无关联，不做伪装、不绕过验证码与访问限制",
   "main": "edge-main.js",
   "author": "付自晧",
   "license": "MIT",
   "private": true,
   "scripts": {
     "start": "electron .",
-    "pack": "electron-packager . GeminiCN --platform=win32 --arch=x64 --out=dist --overwrite --icon=assets/icon.ico --app-version=1.3.0 --ignore=/data --ignore=/dist --ignore=/shot --ignore=/.git --win32metadata.CompanyName=个人使用 --win32metadata.ProductName=Gemini中文版"
+    "pack": "electron-packager . GemCN --platform=win32 --arch=x64 --out=dist --overwrite --app-version=1.3.1 --ignore=/data --ignore=/dist --ignore=/shot --ignore=/.git --win32metadata.CompanyName=个人使用 --win32metadata.ProductName=GemCN非官方外壳"
   },
   "devDependencies": {
     "electron": "^38.4.0",
